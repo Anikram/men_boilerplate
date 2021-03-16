@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+  meandb:
+    image: mongo
+    ports:
+      - 27017:27017
+    restart: always
+    command: --quiet
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+  web_meanauth:
+    image: web_meanauth
+    depends_on:
+      - meandb
+    build: .
+    environment:
+      NODE_ENV: development
+      API_PORT: 5000
+      JWT_SECRET: holy_cow_ambassador
+      DB_SECRET: holy_cow_database
+      DB_CONNECTION_STRING: mongodb://meandb:27017/meanauth
+    ports:
+      - 5000:5000
+    volumes:
+      - .:/usr/src/app
+    links:
+      - meandb
+volumes:
+  data:

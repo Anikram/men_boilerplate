@@ -1,0 +1,5 @@
+.env
+keys/*
+node_modules
+pgdata
+yarn.lock
