@@ -1,9 +1,8 @@
 # M.E.N. boilerplate
 
-## Node.js Backend REST API, User Authentication, Password Reset and MongoDB
+## Node.js Backend REST API, User Authentication, JWT, Password Reset and MongoDB
 
-
-#To launch
+## To launch
 Prerequisites:
 - docker installed with demon running
 
@@ -21,12 +20,12 @@ Prerequisites:
 4. yarn keys - to generate key pairs
 5. docker-compose up - to build and launch project 
 
-##Core functionality
+## Core functionality
 - Node.js
 - Express.js
 - Passport.js
 
-##Features
+## Features
 - email & password login
 - invoke secure access and refresh tokens
 - endpoint can be secured with `passport.authenticate` middleware 
@@ -34,7 +33,7 @@ Prerequisites:
 - tokens invoke on registration and authentication
 - despite response, refresh token will be sent over to users with set-cookies header with httpOnly prop
 
-##Available endpoints
+## Available endpoints
 Try with Postman or with `req.rest` file in the app's root dir.
 
 base url: ``http://localhost:5000/``
@@ -45,6 +44,6 @@ base url: ``http://localhost:5000/``
     router.get('/logout', authRouter.logout);
     router.post('/forgot', authRouter.resetPassword);
 
-##Contributors
+## Contributors
 [Anikram](https://github.com/Anikram])
 
