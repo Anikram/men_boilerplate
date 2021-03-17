@@ -7,7 +7,7 @@ module.exports = {
   secret: process.env.DB_SECRET,
 };
 
-//  === postgreSQL ===
+//  === postgreSQL template ===
 // module.exports = {
 //   development: {
 //     username: process.env.DB_USER,

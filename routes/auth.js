@@ -6,10 +6,9 @@ const {
   generateRefreshToken,
   verifyRefreshToken,
   generatePasswordToken,
-} = require('../utils/issueJwt');
+} = require('../utils/jwts');
 const UsersSchema = require('../db/models/Users');
 const resetPasswordTextAccepted = require('../content/emails/resetPasswordTextAccepted');
-const resetPasswordTextDeclined = require('../content/emails/resetPasswordTextDeclined');
 
 const Users = mongoose.model('Users', UsersSchema);
 
@@ -17,14 +16,15 @@ module.exports = {
   // eslint-disable-next-line consistent-return
   async register(req, res) {
     const {
-      name, email, username, password,
+      firstName, lastName, email, username, password,
     } = req.body;
     const oldUser = await Users.find({ email });
     const user = oldUser[0];
     if (user) { return res.json({ statusCode: 1, error: 'This email is already taken.' }); }
     const { hash, salt } = Users.generateHashSalt(password);
     const newPlayer = new Users({
-      name,
+      firstName,
+      lastName,
       username,
       email,
       hash,
@@ -56,7 +56,7 @@ module.exports = {
         statusCode: 0, accessToken: jwt.token, refreshToken: jrt, expiresIn: jwt.expires,
       });
     } else {
-      return res.json({statusCode: 1, error: 'Email or password are incorrect.' });
+      return res.json({ statusCode: 1, error: 'Email or password are incorrect.' });
     }
   },
   async logout(req, res) {
@@ -94,19 +94,11 @@ module.exports = {
     const oldUser = await Users.find({ email });
     const user = oldUser[0];
     if (!user) {
-      sendMail(req, res, email, resetPasswordTextDeclined)
-        .catch((err) => res.json({ statusCode: 1, accessToken: '', error: `${err.message}` }));
       return res.json({ statusCode: 1, error: 'No user with such credentials.' });
     }
     user.tokenVersion += 1;
     user.passwordToken = generatePasswordToken();
     user.save();
-
-    const emailText = `You are receiving this because you (or someone else) have requested the reset 
-      of the password for your account. Please click on the following link, or paste this 
-      into your browser to complete the process: http:// ${req.headers.host}/reset/${user.passwordToken}
-      If you did not request this, please ignore this email and your password will remain unchanged.`;
-
     sendMail(req, res, email, resetPasswordTextAccepted(req.headers.host, user.passwordToken))
       .then(() => res.json({ statusCode: 0, msg: 'sent' }))
       .catch((err) => res.json({ statusCode: 1, accessToken: '', error: `${err.message}` }));
@@ -116,7 +108,7 @@ module.exports = {
     try {
       const { passToken, email, userNewPassword } = req.body;
       const users = await Users.find({ email });
-      let user = users[0];
+      const user = users[0];
       if (!user) { return res.json({ statusCode: 1, error: 'No user with such credentials.' }); }
       if (!userNewPassword) { return res.json({ statusCode: 1, error: 'New password is invalid.' }); }
       if (user.passwordToken !== passToken) { return res.json({ statusCode: 1, error: 'Invalid password token.' }); }

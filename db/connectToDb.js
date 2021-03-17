@@ -7,12 +7,11 @@ const dbConfig = require('../config/database');
 module.exports = async () => {
   const db = mongoose.connection;
   mongoose.connect(dbConfig.database, { useUnifiedTopology: true, useNewUrlParser: true });
-  // mongoose.model('Users', UsersSchema);
   db.on('error', console.error.bind(console, 'connection error:'));
   db.once('open', () => true);
 };
 
-// === postgreSQL ===
+// === postgreSQL template ===
 
 // module.exports = async (instance) => {
 //   let retries = 5;
