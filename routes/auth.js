@@ -8,6 +8,8 @@ const {
   generatePasswordToken,
 } = require('../utils/issueJwt');
 const UsersSchema = require('../db/models/Users');
+const resetPasswordTextAccepted = require('../content/emails/resetPasswordTextAccepted');
+const resetPasswordTextDeclined = require('../content/emails/resetPasswordTextDeclined');
 
 const Users = mongoose.model('Users', UsersSchema);
 
@@ -19,7 +21,7 @@ module.exports = {
     } = req.body;
     const oldUser = await Users.find({ email });
     const user = oldUser[0];
-    if (user) { return res.status(200).json({statusCode: 1, error: 'This email is already taken.'})}
+    if (user) { return res.json({ statusCode: 1, error: 'This email is already taken.' }); }
     const { hash, salt } = Users.generateHashSalt(password);
     const newPlayer = new Users({
       name,
@@ -54,7 +56,7 @@ module.exports = {
         statusCode: 0, accessToken: jwt.token, refreshToken: jrt, expiresIn: jwt.expires,
       });
     } else {
-      return res.json({statusCode: 1, error: 'Email or password are incorrect.'})
+      return res.json({statusCode: 1, error: 'Email or password are incorrect.' });
     }
   },
   async logout(req, res) {
@@ -84,23 +86,49 @@ module.exports = {
       .catch((err) => res.json({ statusCode: 1, accessToken: '', error: `Refresh token invalid: ${err.message}` }));
   },
   // eslint-disable-next-line consistent-return
-  async resetPassword(req, res) {
+  async getResetPasswordLink(req, res) {
     const { email } = req.body;
     if (!email) {
-      return res.json({ statusCode: 1, error: 'Email needed to proceed' })
+      return res.json({ statusCode: 1, error: 'Email needed to proceed' });
     }
     const oldUser = await Users.find({ email });
     const user = oldUser[0];
-
     if (!user) {
-      return res.json({ statusCode: 1, error: 'No user with such credentials.' })
+      sendMail(req, res, email, resetPasswordTextDeclined)
+        .catch((err) => res.json({ statusCode: 1, accessToken: '', error: `${err.message}` }));
+      return res.json({ statusCode: 1, error: 'No user with such credentials.' });
     }
     user.tokenVersion += 1;
     user.passwordToken = generatePasswordToken();
     user.save();
 
-    sendMail(req, res, email, user.passwordToken)
+    const emailText = `You are receiving this because you (or someone else) have requested the reset 
+      of the password for your account. Please click on the following link, or paste this 
+      into your browser to complete the process: http:// ${req.headers.host}/reset/${user.passwordToken}
+      If you did not request this, please ignore this email and your password will remain unchanged.`;
+
+    sendMail(req, res, email, resetPasswordTextAccepted(req.headers.host, user.passwordToken))
       .then(() => res.json({ statusCode: 0, msg: 'sent' }))
       .catch((err) => res.json({ statusCode: 1, accessToken: '', error: `${err.message}` }));
+  },
+  // eslint-disable-next-line consistent-return
+  async resetPassword(req, res) {
+    try {
+      const { passToken, email, userNewPassword } = req.body;
+      const users = await Users.find({ email });
+      let user = users[0];
+      if (!user) { return res.json({ statusCode: 1, error: 'No user with such credentials.' }); }
+      if (!userNewPassword) { return res.json({ statusCode: 1, error: 'New password is invalid.' }); }
+      if (user.passwordToken !== passToken) { return res.json({ statusCode: 1, error: 'Invalid password token.' }); }
+      const { hash, salt } = Users.generateHashSalt(userNewPassword);
+      const newPassToken = generatePasswordToken();
+      user.hash = hash;
+      user.salt = salt;
+      user.passwordToken = newPassToken;
+      await user.save();
+      return res.json({ statusCode: 0, message: 'Password has been changed' });
+    } catch (err) {
+      console.error(err.message);
+    }
   },
 };

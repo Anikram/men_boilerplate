@@ -22,7 +22,7 @@ Content-Type: application/json
 
 {
   "email": "jerk@nightwatch.nrd",
-  "password": "aaa"
+  "password": "aaaa"
 }
 
 ### Refresh access token

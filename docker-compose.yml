@@ -8,7 +8,7 @@ services:
     restart: always
     command: --quiet
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - mongodata:/mongo/data
   web_meanauth:
     image: web_meanauth
     depends_on:
@@ -20,6 +20,7 @@ services:
       JWT_SECRET: holy_cow_ambassador
       DB_SECRET: holy_cow_database
       DB_CONNECTION_STRING: mongodb://meandb:27017/meanauth
+      EMAIL_RESET_SENDER: passwordreset@demo.com
     ports:
       - 5000:5000
     volumes:
@@ -27,4 +28,4 @@ services:
     links:
       - meandb
 volumes:
-  data:
+  mongodata:

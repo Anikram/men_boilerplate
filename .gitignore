@@ -3,3 +3,4 @@ keys/*
 node_modules
 pgdata
 yarn.lock
+mongodata

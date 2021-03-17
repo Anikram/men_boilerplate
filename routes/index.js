@@ -12,7 +12,8 @@ router.post('/register', authRouter.register);
 router.post('/authenticate', authRouter.authenticate);
 router.post('/refresh_token', authRouter.refreshTokens);
 router.get('/logout', authRouter.logout);
-router.post('/forgot', authRouter.resetPassword);
+router.post('/forgot', authRouter.getResetPasswordLink);
+router.post('/reset', authRouter.resetPassword);
 
 router.get('/users', passport.authenticate('jwt', { session: false }), usersRouter.listUsers);
 

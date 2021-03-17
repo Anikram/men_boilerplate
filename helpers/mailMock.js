@@ -1,4 +1,6 @@
-function sendMail(req, res, email, token) {
+require('dotenv').config();
+
+function sendMail(req, res, email, text) {
   function deliver(options, cb) {
     console.log('>>>');
     console.log(options);
@@ -7,12 +9,9 @@ function sendMail(req, res, email, token) {
   return new Promise((r) => {
     const mailOptions = {
       to: email,
-      from: 'passwordreset@demo.com',
-      subject: 'Express.js Password Reset',
-      text: `You are receiving this because you (or someone else) have requested the reset 
-      of the password for your account. Please click on the following link, or paste this 
-      into your browser to complete the process: http:// ${req.headers.host}/reset/${token}
-      If you did not request this, please ignore this email and your password will remain unchanged.`
+      from: process.env.EMAIL_RESET_SENDER,
+      subject: 'Password Reset',
+      text,
     };
 
     deliver(mailOptions, (err) => {
